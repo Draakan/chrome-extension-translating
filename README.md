@@ -1,5 +1,7 @@
 https://github.com/user-attachments/assets/b0f4aa33-66c8-45d4-9a03-ec9fb60c8bb1
 
+Translating lambda: https://github.com/Draakan/deepl-translate-lambda
+
 
 # React + TypeScript + Vite
 
