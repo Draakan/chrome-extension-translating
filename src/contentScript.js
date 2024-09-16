@@ -1,4 +1,20 @@
-document.addEventListener('dblclick', async () => {
+let isTextSelected = false;
+
+document.addEventListener('mouseup', () => {
+  if (isTextSelected) {
+    handleTextSelection();
+  }
+
+  isTextSelected = false;
+});
+
+document.addEventListener('selectionchange', () => {
+  const selectedText = window.getSelection().toString().trim();
+
+  isTextSelected = selectedText.length >= 2;
+});
+
+async function handleTextSelection() {
   const selectedText = window.getSelection().toString().trim();
 
   if (selectedText) {
@@ -7,7 +23,7 @@ document.addEventListener('dblclick', async () => {
 
     await showPopup(selectedText, rect);
   }
-});
+}
 
 async function showPopup(word, rect) {
   const existingPopup = document.querySelector('.custom-popup');
@@ -18,7 +34,7 @@ async function showPopup(word, rect) {
 
   const popup = createPopup(rect);
 
-  popup.textContent = `Loading translation for: ${ word }...`;
+  popup.textContent = `Loading translation for: ${ word } ...`;
 
   document.body.appendChild(popup);
 
@@ -27,21 +43,12 @@ async function showPopup(word, rect) {
 
     if (result) {
       popup.textContent = `Translation for "${word}": ${result.translations[0].text}`;
-      
-      const closeButton = document.createElement('button');
 
-      closeButton.textContent = 'Close';
-      closeButton.style.backgroundColor = '#3498db';
-      closeButton.style.color = '#fff';
-      closeButton.style.border = 'none';
-      closeButton.style.padding = '5px 10px';
-      closeButton.style.borderRadius = '20px';
-      closeButton.style.cursor = 'pointer';
-      closeButton.style.marginLeft = '7px';
+      const addButton = createAddButton();
 
-      closeButton.onclick = () => popup.remove(); 
+      addButton.onclick = () => popup.remove();
 
-      popup.appendChild(closeButton);
+      popup.appendChild(addButton);
     } else {
       popup.textContent = `No translation found for "${word}".`;
     }
@@ -81,13 +88,30 @@ function createPopup(rect) {
   popup.style.position = 'absolute';
   popup.style.background = '#fff';
   popup.style.border = '1px solid #ccc';
-  popup.style.padding = '10px';
+  popup.style.padding = '5px';
   popup.style.borderRadius = '5px';
   popup.style.boxShadow = '0px 4px 10px rgba(0,0,0,0.1)';
   popup.style.zIndex = 10000;
-  popup.style.fontSize = '15px';
+  popup.style.fontSize = '14px';
+  popup.style.fontFamily = 'sans-serif';
   popup.style.top = `${rect.top + window.scrollY - popup.offsetHeight - 45}px`;
   popup.style.left = `${rect.left - window.scrollX}px`;
 
   return popup;
+}
+
+function createAddButton() {
+  const addButton = document.createElement('button');
+
+  addButton.textContent = 'Add';
+  addButton.style.backgroundColor = '#3498db';
+  addButton.style.color = '#fff';
+  addButton.style.border = 'none';
+  addButton.style.padding = '-1px 10px';
+  addButton.style.borderRadius = '20px';
+  addButton.style.cursor = 'pointer';
+  addButton.style.marginLeft = '7px';
+  addButton.style.fontSize = '14px';
+
+  return addButton;
 }
