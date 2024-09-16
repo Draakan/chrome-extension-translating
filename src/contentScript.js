@@ -2,7 +2,9 @@ let isTextSelected = false;
 
 document.addEventListener('mouseup', () => {
   if (isTextSelected) {
-    handleTextSelection();
+    const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
+
+    showTranslateButton(rect);
   }
 
   isTextSelected = false;
@@ -14,14 +16,45 @@ document.addEventListener('selectionchange', () => {
   isTextSelected = selectedText.length >= 2;
 });
 
-async function handleTextSelection() {
+function showTranslateButton(rect) {
+  const existingPopup = document.querySelector('.translate-button');
+
+  if (existingPopup) {
+    existingPopup.remove();
+  }
+
+  const translateBtnPopup = createPopup(rect);
+
+  translateBtnPopup.className = 'translate-button';
+
+  document.body.appendChild(translateBtnPopup);
+
+  const translateBtn = createButton('Translate');
+
+  translateBtn.onclick = () => {
+    handleTextSelection(rect);
+
+    translateBtnPopup.remove();
+  };
+
+  translateBtnPopup.appendChild(translateBtn);
+
+  setTimeout(() => {
+    document.addEventListener('click', onClickOutsideTranslate = (event) => {
+      if (!translateBtnPopup.contains(event.target)) {
+        translateBtnPopup.remove();
+
+        document.removeEventListener('click', onClickOutsideTranslate);
+      }
+    });
+  }, 100);
+}
+
+async function handleTextSelection(rect) {
   const selectedText = window.getSelection().toString().trim();
 
   if (selectedText) {
-    const range = window.getSelection().getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    await showPopup(selectedText, rect);
+    showPopup(selectedText, rect);
   }
 }
 
@@ -34,6 +67,7 @@ async function showPopup(word, rect) {
 
   const popup = createPopup(rect);
 
+  popup.className = 'custom-popup';
   popup.textContent = `Loading translation for: ${ word } ...`;
 
   document.body.appendChild(popup);
@@ -44,11 +78,17 @@ async function showPopup(word, rect) {
     if (result) {
       popup.textContent = `Translation for "${word}": ${result.translations[0].text}`;
 
-      const addButton = createAddButton();
+      const addButton = createButton('Add');
+      const closeButton = createButton('Close');
+
+      addButton.style.marginLeft = '7px';
+      closeButton.style.marginLeft = '7px';
 
       addButton.onclick = () => popup.remove();
+      closeButton.onclick = () => popup.remove();
 
       popup.appendChild(addButton);
+      popup.appendChild(closeButton);
     } else {
       popup.textContent = `No translation found for "${word}".`;
     }
@@ -84,7 +124,6 @@ async function getTranslates(word) {
 function createPopup(rect) {
   const popup = document.createElement('div');
 
-  popup.className = 'custom-popup';
   popup.style.position = 'absolute';
   popup.style.background = '#fff';
   popup.style.border = '1px solid #ccc';
@@ -100,17 +139,16 @@ function createPopup(rect) {
   return popup;
 }
 
-function createAddButton() {
+function createButton(textContent) {
   const addButton = document.createElement('button');
 
-  addButton.textContent = 'Add';
+  addButton.textContent = textContent;
   addButton.style.backgroundColor = '#3498db';
   addButton.style.color = '#fff';
   addButton.style.border = 'none';
   addButton.style.padding = '-1px 10px';
   addButton.style.borderRadius = '20px';
   addButton.style.cursor = 'pointer';
-  addButton.style.marginLeft = '7px';
   addButton.style.fontSize = '14px';
 
   return addButton;
