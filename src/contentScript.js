@@ -76,7 +76,9 @@ async function showPopup(word, rect) {
     const result = await getTranslates(word);
 
     if (result) {
-      popup.textContent = `Translation for "${word}": ${result.translations[0].text}`;
+      const translatedWord = result.translations[0].text;
+
+      popup.textContent = `Translation for "${word}": ${translatedWord}`;
 
       const addButton = createButton('Add');
       const closeButton = createButton('Close');
@@ -84,7 +86,14 @@ async function showPopup(word, rect) {
       addButton.style.marginLeft = '7px';
       closeButton.style.marginLeft = '7px';
 
-      addButton.onclick = () => popup.remove();
+      addButton.onclick = async () => {
+        addButton.textContent = 'Saving...';
+
+        await saveTranslatePair(word, translatedWord);
+
+        popup.remove();
+      };
+
       closeButton.onclick = () => popup.remove();
 
       popup.appendChild(addButton);
@@ -108,10 +117,29 @@ async function showPopup(word, rect) {
 
 async function getTranslates(word) {
   try {
-    const result = await fetch(import.meta.env.VITE_DEEPL_API_LAMBDA_URL, {
+    const result = await fetch(import.meta.env.VITE_DEEPL_API_TRANSLATE_LAMBDA_URL, {
       method: 'POST',
       body: JSON.stringify({
         text: word,
+      }),
+    });
+
+    return await result.json()
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+async function saveTranslatePair(originalWord, translatedWord) {
+  try {
+    const result = await fetch(import.meta.env.VITE_DEEPL_API_SAVE_PAIR_LAMBDA_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        originalWord,
+        translatedWord,
       }),
     });
 
